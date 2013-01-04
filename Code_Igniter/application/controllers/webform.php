@@ -31,11 +31,9 @@ class Webform extends CI_Controller {
 			'/libraries/bootstrap/js/bootstrap.min.js',	
 			'/libraries/jdewit-bootstrap-timepicker/js/bootstrap-timepicker.js',
 			'/libraries/bootstrap-datepicker/js/bootstrap-datepicker.js',
-			'/libraries/bootstrap-select.js',
 			'/libraries/modernizr.min.js',
 			'/libraries/xpathjs_javarosa/build/xpathjs_javarosa.min.js',
-			'/libraries/vkbeautify.js',
-			"http://maps.googleapis.com/maps/api/js?v=3.exp&key=".$this->config->item('google_maps_api_v3_key')."&sensor=false&libraries=places"
+			'/libraries/vkbeautify.js'
 		);
 		$this->default_stylesheets = array
 		(
@@ -98,6 +96,7 @@ class Webform extends CI_Controller {
 					'/js-source/common.js',
 					'/js-source/storage.js',
 					'/js-source/form.js',
+					'/js-source/widgets.js',
 					'/js-source/connection.js',
 					'/js-source/cache.js',
 					'/js-source/survey_controls.js',

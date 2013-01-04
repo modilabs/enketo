@@ -15,13 +15,11 @@
  */
 
 /*jslint browser:true, devel:true, jquery:true, smarttabs:true*//*global Modernizr, console:true*/
-// CHANGE: it would be better to remove references to store and form in common.js
-//
-// Copyright 2012 Martijn van de Rijdt
+
+// TODO: it would be better to remove references to store and form in common.js
 
 var /** @type {GUI}*/ gui;
 var /** @type {Print} */ printO;
-var DEFAULT_SETTINGS = {};
 
 $(document).ready(function(){
 	"use strict";
@@ -64,7 +62,7 @@ GUI.prototype.init = function(){
 	"use strict";
 		
 	this.nav.setup();
-	this.pages().init();
+	this.pages.init();
 	this.setEventHandlers();
 	// setup additional 'custom' eventHandlers declared other js file
 	if (typeof this.setCustomEventHandlers === 'function'){
@@ -108,12 +106,12 @@ GUI.prototype.setEventHandlers = function(){
 	});
 
 	$(document).on('click', '#page .close', function(event){
-		that.pages().close();
+		that.pages.close();
 		return false;
 	});
 
 	//$(document).on('click', '.touch #page', function(event){
-	//	that.pages().close();
+	//	that.pages.close();
 	//});
 	
 	// capture all internal links to navigation menu items (except the links in the navigation menu itself)
@@ -132,9 +130,8 @@ GUI.prototype.setEventHandlers = function(){
 		.click(function(event){
 			event.preventDefault();
 			var targetPage = $(this).attr('href').substr(1);
-			that.pages().open(targetPage);
-			$(this).closest('li').addClass('active');
-			//$(this).closest('li').addClass('nav-state-active');//.css('border-color', headerBorderColor);
+			that.pages.open(targetPage);
+			$(this).closest('li').addClass('active').siblings().removeClass('active');
 		});
 	
 	// handlers for status icons in header
@@ -194,54 +191,59 @@ GUI.prototype.nav = {
 	},
 	reset : function(){
 		"use strict";
-		$('nav ul li').removeClass('active');//.css('border-color', headerBackgroundColor);
-		//$('nav ul li a').css('color', buttonBackgroundColorDefault);
+		$('nav ul li').removeClass('active');
 	}
 };
 
-GUI.prototype.pages = function(){
-	"use strict";
-
-	this.init = function(){
-
-		//this.showing = false;
-		this.$pages = $('<pages></pages>');// placeholder 'parent' element for the articles (pages)
+GUI.prototype.pages = {
+	/**
+	 * initializes the pages
+	 */
+	init : function(){
+		// placeholder 'parent' element for the articles (pages)
+		this.$pages = $('<pages></pages>');
 		// detaching pages from DOM and storing them in the pages variable
-		$('article.page').detach().appendTo(this.$pages);//.css('display','block');
-	};
+		$('article.page').detach().appendTo(this.$pages);
+	},
 
-	this.get = function(name){
+	/**
+	 * Obtains a particular pages from the pages variable
+	 * @param  {string} name id of page
+	 * @return {jQuery}
+	 */
+	get : function(name){
+		var $page = this.$pages.find('article[id="'+name+'"]');
 
-		var $page = this.$pages.find('article[id="'+name+'"]');//.clone(true);
-		//switch(name){
-		//	case 'records':
-			//_this.updateRecordList(page); // ?? Why does call with this.up.. not work?
-		//		break;
-		//	case 'settings':
-		//}
 		$page = ($page.length > 0) ? $page : $('article[id="'+name+'"]');
 		
 		return $page ;
-		//}
-	};
+	},
 		
-	this.isShowing = function(name){
-		//no name means any page
+	/**
+	 * Confirms whether a page with a particular id or any page is currently showing
+	 * @param  {string=}  name id of page
+	 * @return {boolean}       returns true or false
+	 */
+	isShowing : function(name){
 		var idSelector = (typeof name !== 'undefined') ? '[id="'+name+'"]' : '';
 		return ( $('#page article.page'+idSelector).length > 0 );
-	};
-		
-	this.open = function(pg){
+	},
+	
+	/**
+	 * Opens a page with a particular id
+	 * @param  {string} pg id of page
+	 */
+	open : function(pg){
 		var $page;
 		if (this.isShowing(pg)){
 			return;
 		}
 
-		$page = this.get(pg);//outsidePage;
-		//console.debug('opening page '+pg);
+		$page = this.get(pg);
 		
 		if ($page.length !== 1){
-			return console.error('page not found');
+			console.error('page not found');
+			return;
 		}
 
 		if(this.isShowing()){
@@ -249,38 +251,27 @@ GUI.prototype.pages = function(){
 		}
 			
 		$('#page .content').prepend($page.show()).trigger('change');
-		//$('#overlay').show();
-
-		//for some reason, the scrollbar needs to be added after a short delay (default duration of show() maybe)
-		//similarly adding the event handler needs to be done a delay otherwise it picks up an even(?) instantly
-		//addScrollBar should be called each time page loads because record list will change
-		/*setTimeout(function(){
-			$page.find('.scroll-list').addScrollBar();
-			$('#overlay, header').bind('click.pageEvents', function(){
-				//triggers a click of the page close button
-				$('#page-close').trigger('click');
-			});
-		}, 50);*/
 		
 		// if the page is visible as well as the feedbackbar the display() method should be called if the window is resized
 		$(window).bind('resize.pageEvents', function(){
 			$('#page').trigger('change');
 		});
-	};
-		
-	this.close = function(){
-		var $page;
-		//console.log('closePage() triggered');
-		$page = $('#page .page').detach();
-		this.$pages.append($page);
-		$('#page').trigger('change');
-		this.nav.reset();
-		$('#overlay').hide();
-		$('#overlay, header').unbind('.pageEvents');
-		$(window).unbind('.pageEvents');
-	};
-
-	return this;
+	},
+	
+	/**
+	 * Closes the currently shown page
+	 */
+	close : function(){
+		var $page = $('#page .page').detach();//.length > 0) ? $('#page .page').detach() : [];
+		if ($page.length > 0){
+			this.$pages.append($page);
+			$('#page').trigger('change');
+			$('nav ul li').removeClass('active');
+			$('#overlay').hide();
+			$('#overlay, header').unbind('.pageEvents');
+			$(window).unbind('.pageEvents');
+		}
+	}
 };
 
 /**
@@ -489,6 +480,19 @@ GUI.prototype.updateStatus = {
 };
 
 /**
+ * Returns the height in pixels that it would take for this element to stretch down to the bottom of the window
+ * For now it's a dumb function that only takes into consideration a header above the element.
+ * @param  {jQuery} $elem [description]
+ * @return {[type]}       [description]
+ */
+GUI.prototype.fillHeight = function($elem){
+	var bottom = $(window).height(),
+		above = $('header').outerHeight(true),
+		fluff = $elem.outerHeight() - $elem.height();
+	return bottom - above - fluff;
+};
+
+/**
  * Makes sure sliders that reveal the feedback bar and page have the correct css 'top' property
  */
 GUI.prototype.display = function(){
@@ -501,7 +505,7 @@ GUI.prototype.display = function(){
 	//the below can probably be simplified, is the this.page().isVisible check necessary at all?
 	if ($feedback.find('p').length > 0){
 		feedbackTop = ($header.css('position') === 'fixed') ? $header.outerHeight() : 0; // shows feedback-bar
-		if (this.pages().isShowing()){
+		if (this.pages.isShowing()){
 			pageTop = $header.outerHeight() + $feedback.outerHeight(); // shows page
 		}
 		else{
@@ -510,7 +514,7 @@ GUI.prototype.display = function(){
 	}
 	else{
 		feedbackTop = ($header.css('position') === 'fixed') ? $header.outerHeight() - $feedback.outerHeight() : 0 - $feedback.outerHeight();
-		if (this.pages().isShowing()){
+		if (this.pages.isShowing()){
 			pageTop = $header.outerHeight(); // shows page
 		}
 		else{
@@ -536,8 +540,8 @@ GUI.prototype.setSettings = function(settings){
 	
 	$.each(settings, function(key, value){ //iterate through each item in object
 		//console.log('key:'+key+' value:'+value);// DEBUG
-		$input = (value) ? that.pages().get('settings').find('input[name="'+key+'"][value="'+value+'"]') :
-			that.pages().get('settings').find('input[name="'+key+'"]');
+		$input = (value) ? that.pages.get('settings').find('input[name="'+key+'"][value="'+value+'"]') :
+			that.pages.get('settings').find('input[name="'+key+'"]');
 
 		value = (value) ? true : false;
 		if ($input.length > 0){
@@ -549,22 +553,26 @@ GUI.prototype.setSettings = function(settings){
 
 /**
  * Parses a list of forms
- * @param  {?*} list array of object with form information
+ * @param  {?Array.<{title: string, url: string, server: string, name: string}>} list array of object with form information
  * @param { jQuery } $target jQuery-wrapped target node with a <ul> element as child to append formlist to
+ * @param { boolean} reset if list provided is empty and reset is true, no error message is shown
  */
-GUI.prototype.parseFormlist = function(list, $target){
+GUI.prototype.parseFormlist = function(list, $target, reset){
 	var i, listHTML='';
 	if(!$.isEmptyObject(list)){
 		for (i in list){
 			listHTML += '<li><a class="btn btn-block btn-info" id="'+i+'" title="'+list[i].title+'" '+
 				'href="'+list[i].url+'" data-server="'+list[i].server+'" >'+list[i].name+'</a></li>';
 		}
+		$target.removeClass('empty');
 	}
-	else{
-		listHTML = '<p class="alert alert-error">Error occurred during creation of form list or no forms found</p>';
+	else {
+		$target.addClass('empty');
+		if (!reset){
+			listHTML = '<p class="alert alert-error">Error occurred during creation of form list or no forms found</p>';
+		}
 	}
-	$target.removeClass('empty').find('ul').empty().append(listHTML);
-	//$('#form-list').show();
+	$target.find('ul').empty().append(listHTML);
 };
 
 function getGetVariable(variable) {
@@ -589,9 +597,9 @@ function Print(){
 	//	that = this;
 	this.setStyleSheet();
 	//IE, FF, the 'proper' way:
-    if (typeof window.onbeforeprint !== 'undefined'){
-		$(window).on('beforeprint', this.printForm);
-    }
+    //if (typeof window.onbeforeprint !== 'undefined'){
+	//	$(window).on('beforeprint', this.printForm);
+    //}
     //Chrome, Safari, Opera: (this approach has problems)
 	//else {
 	//	mpl = window.matchMedia('print');
@@ -604,13 +612,34 @@ function Print(){
 	//		return false;
 	//	});
 	//}
+	this.setDpi();
 }
 
+/**
+ * Calculates the dots per inch and sets the dpi property
+ */
+Print.prototype.setDpi = function(){
+	var dpi = {},
+		e = document.body.appendChild(document.createElement("DIV"));
+	e.style.width = "1in";
+	e.style.padding = "0";
+	dpi.v = e.offsetWidth;
+	e.parentNode.removeChild(e);
+	this.dpi = dpi.v;
+};
+
+/**
+ * Sets print stylesheet properties
+ */
 Print.prototype.setStyleSheet = function(){
 	this.styleSheet = this.getStyleSheet();
 	this.$styleSheetLink = $('link[media="print"]:eq(0)');
 };
 
+/**
+ * Gets print stylesheets
+ * @return {Element} [description]
+ */
 Print.prototype.getStyleSheet = function(){
 	for (var i = 0 ; i < document.styleSheets.length ; i++){
 		if (document.styleSheets[i].media.mediaText === 'print'){
@@ -620,6 +649,9 @@ Print.prototype.getStyleSheet = function(){
 	return null;
 };
 
+/**
+ * Applies the print stylesheet to the current view by changing stylesheets media property to 'all'
+ */
 Print.prototype.styleToAll = function (){
 	//sometimes, setStylesheet fails upon loading
 	if (!this.styleSheet) this.setStyleSheet();
@@ -629,24 +661,162 @@ Print.prototype.styleToAll = function (){
 	this.$styleSheetLink.attr('media', 'all');
 };
 
+/**
+ * Resets the print stylesheet to only apply to media 'print'
+ */
 Print.prototype.styleReset = function(){
 	this.styleSheet.media.mediaText = 'print';
 	this.$styleSheetLink.attr('media', 'print');
 };
 
+/**
+ * Prints the form after first setting page breaks (every time it is called)
+ */
 Print.prototype.printForm = function(){
 	console.debug('preparing form for printing');
+	this.removePageBreaks();
+	this.removePossiblePageBreaks();
 	this.styleToAll();
 	this.addPageBreaks();
 	this.styleReset();
 	window.print();
 };
 
-Print.prototype.addPageBreaks = function(){
-	// add Alex' code
+/**
+ * Removes all current page breaks
+ */
+Print.prototype.removePageBreaks = function(){
+	$('.page-break').remove();
+};
+
+/**
+ * Removes all potential page breaks
+ */
+Print.prototype.removePossiblePageBreaks = function(){
+	$('.possible-break').remove();
 };
 
 
+/**
+ * Adds a temporary potential page break to each location in the form that is allowed to have one
+ */
+Print.prototype.addPossiblePageBreaks = function(){
+	var possible_break = $("<hr>", {"class": "possible-break"/*, "style":"background-color:blue; height: 1px"*/});
+	
+	this.removePossiblePageBreaks();
+
+	$('form.jr').before(possible_break.clone()).after(possible_break.clone())
+		.find('fieldset>legend, label:not(.geo)>input:not(input:radio, input:checkbox), label>select, label>textarea, .trigger>*, h4>*, h3>*')
+		.parent().each(function() {
+			var $this, prev;
+			$this = $(this);
+			prev = $this.prev().get(0);
+			//some exceptions
+			if (
+				prev && ( prev.nodeName === "H3" || prev.nodeName === "H4" ) ||
+				$(prev).hasClass('repeat-number') ||
+				$this.parents('#jr-calculated-items, #jr-preload-items').length > 0
+				) {
+				return null;
+			} else {
+				return $this.before(possible_break.clone());
+			}
+		});
+	
+	//correction of placing two direct sibling breaks
+	$('.possible-break').each(function() {
+		if ($(this).prev().hasClass('possible-break')) {
+			return $(this).remove();
+		}
+	});
+};
+
+/**
+ * Adds page breaks intelligently
+ * Thank you, Alex Dorey!
+ */
+Print.prototype.addPageBreaks = function(){
+	var i, page, page_a, page_h, pages, possible_break, possible_breaks, qgroup, qgroups, _i, _j, _k, _len, _len1, _ref,
+		page_height_in_inches = 9.5,
+		page_height_in_pixels = this.dpi * page_height_in_inches,
+		pb = "<hr class='page-break' />",
+
+		QGroup = (function() {
+			/*
+			This is supposed to be a representation of a "Question Group", which exists only to
+			calculate the height of the question group and to make it easy to prepend a pagebreak
+			if necessary.
+			*/
+			function QGroup(begin, end) {
+				this.begin = $(begin);
+				this.begin_top = this.begin.offset().top;
+				this.end = $(end);
+				this.end_top = this.end.offset().top;
+				this.h = this.end_top - this.begin_top;
+				if (this.h < 0) {
+					console.debug('begin (top: '+this.begin_top+')', begin);
+					console.debug('end (top: '+this.end_top+')', end);
+					throw new Error("A question group has an invalid height.");
+				}
+			}
+
+			QGroup.prototype.break_before = function() {
+				var action, elem, prev, where_to_situate_breakpoint;
+				prev = this.begin.prev().get(0);
+				if (!prev) {
+					where_to_situate_breakpoint = ['before', this.begin.parent().get(0)];
+				} else {
+					where_to_situate_breakpoint = ['after', prev];
+				}
+				action = where_to_situate_breakpoint[0], elem = where_to_situate_breakpoint[1];
+				//console.debug('elem to place pb '+action+': ', elem);
+				return $(elem)[action]( pb );
+			};
+
+			return QGroup;
+		})();
+
+	this.removePageBreaks();
+
+	this.addPossiblePageBreaks();
+	possible_breaks = $('.possible-break');
+
+	qgroups = [];
+	for (i = 1; i < possible_breaks.length ; i++){
+		qgroups.push(new QGroup(possible_breaks[i - 1], possible_breaks[i]));
+	}
+
+	page_h = 0;
+	page_a = [];
+	pages = [];
+
+	for (_j = 0, _len = qgroups.length; _j < _len; _j++) {
+		qgroup = qgroups[_j];
+		if ((page_h + qgroup.h) > page_height_in_pixels) {
+			pages.push(page_a);
+			page_a = [qgroup];
+			page_h = qgroup.h;
+		} else {
+			page_a.push(qgroup);
+			page_h += qgroup.h;
+		}
+	}
+
+	pages.push(page_a);
+	
+	console.debug('pages: ', pages);
+
+	//skip the first page
+	for (_k = 1, _len1 = pages.length; _k < _len1; _k++) {
+		page = pages[_k];
+		if (page.length > 0) {
+			page[0].break_before();
+		}
+	}
+
+	//remove the possible-breaks
+	return $('.possible-break').remove();
+};
 	
 (function($){
 	"use strict";
@@ -686,42 +856,36 @@ Print.prototype.addPageBreaks = function(){
 			allow: ""
 		}, p);
 
-		return this.each
-			(
-				function()
-				{
+		return this.each(function(){
 
-					if (p.nocaps) p.nchars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-					if (p.allcaps) p.nchars += "abcdefghijklmnopqrstuvwxyz";
-					
-					var s = p.allow.split('');
-					for (var i=0;i<s.length;i++) if (p.ichars.indexOf(s[i]) != -1) s[i] = "\\" + s[i];
-					p.allow = s.join('|');
-					
-					var reg = new RegExp(p.allow,'gi');
-					var ch = p.ichars + p.nchars;
-					ch = ch.replace(reg,'');
+			if (p.nocaps) p.nchars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			if (p.allcaps) p.nchars += "abcdefghijklmnopqrstuvwxyz";
+			
+			var s = p.allow.split('');
+			for (var i=0;i<s.length;i++) if (p.ichars.indexOf(s[i]) != -1) s[i] = "\\" + s[i];
+			p.allow = s.join('|');
+			
+			var reg = new RegExp(p.allow,'gi');
+			var ch = p.ichars + p.nchars;
+			ch = ch.replace(reg,'');
 
-					$(this).keypress
-						(
-							function (e)
-								{
-									var k;
-									if (!e.charCode) k = String.fromCharCode(e.which);
-										else k = String.fromCharCode(e.charCode);
-										
-									if (ch.indexOf(k) != -1) e.preventDefault();
-									if (e.ctrlKey&&k=='v') e.preventDefault();
-									
-								}
+			$(this).keypress
+				(
+					function (e)
+						{
+							var k;
+							if (!e.charCode) k = String.fromCharCode(e.which);
+								else k = String.fromCharCode(e.charCode);
 								
-						);
+							if (ch.indexOf(k) != -1) e.preventDefault();
+							if (e.ctrlKey&&k=='v') e.preventDefault();
+							
+						}
 						
-					$(this).bind('contextmenu',function () {return false;});
-									
-				}
-			);
-
+				);
+				
+			$(this).bind('contextmenu',function () {return false;});
+		});
 	};
 
 	$.fn.numeric = function(p) {

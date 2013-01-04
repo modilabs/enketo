@@ -121,7 +121,7 @@ function saveForm(confirmedRecordName, confirmedFinalStatus, deleteOldName, over
 		form.setEditStatus(false);
 		$('button#delete-form').button('enable');
 		//update records in GUI
-		$('form.jr').trigger('save', JSON.stringify(store.getFormList()));
+		$('form.jr').trigger('save', JSON.stringify(store.getRecordList()));
 	}
 	//else if (result === 'require'){
 	//	gui.alert (form.KEY_LABEL+' is required. Please provide this.');
@@ -153,7 +153,7 @@ function resetForm(confirmed){
 	var message, choices;
 	//valueFirst = /**@type {string} */$('#saved-forms option:first').val();
 	//console.debug('first form is '+valueFirst);
-	//gui.pages().get('records').find('#records-saved').val(valueFirst);
+	//gui.pages.get('records').find('#records-saved').val(valueFirst);
 	console.debug('editstatus: '+ form.getEditStatus());
 	if (!confirmed && form.getEditStatus()){
 		message = 'There are unsaved changes, would you like to continue <strong>without</strong> saving those?';
@@ -184,7 +184,7 @@ function deleteForm(confirmed) {
 			if (success){
 				resetForm(true);
 				gui.showFeedback('Successfully deleted form.');
-				$('form.jr').trigger('delete', JSON.stringify(store.getFormList()));
+				$('form.jr').trigger('delete', JSON.stringify(store.getRecordList()));
 			}
 			else {
 				gui.showFeedback('An error occurred when trying to delete this form.');
@@ -224,13 +224,12 @@ function submitForm() {
 	record = { 'data': form.getDataStr(true, true), 'ready': true};
 	saveResult = store.setRecord(form.getName()+' - '+store.getCounterValue(), record, false, false);
 	
-	console.log('result of save: '+saveResult); // DEBUG
+	console.log('result of save: '+saveResult);
 	if (saveResult === 'success'){
 		resetForm(true);
-		$('form.jr').trigger('save', JSON.stringify(store.getFormList()));
+		$('form.jr').trigger('save', JSON.stringify(store.getRecordList()));
 		//attempt uploading the data (all data in localStorage)
 		//NOTE: THIS (force=true) NEEDS TO CHANGE AS IT WOULD BE ANNOYING WHEN ENTERING LOTS OF RECORDS WHILE OFFLINE
-		//connection.uploadFromStore(true);
 		//TODO: add second parameter getCurrentRecordName() to prevent currenty open record from being submitted
 		connection.uploadRecords(store.getSurveyDataArr(true), true);
 	}
@@ -240,7 +239,8 @@ function submitForm() {
 }
 
 /**
- * Used to submit a form with data that was loaded by POST
+ * Used to submit a form with data that was loaded by POST. This function is not saved in localStorage and not used
+ * in offline-capable views.
  *
  */
 function submitEditedForm() {
@@ -390,17 +390,6 @@ GUI.prototype.setCustomEventHandlers = function(){
 			$(this).removeClass('ui-state-hover');
 		});
 
-	//export/backup locally stored data
-	this.pages().get('records').find('button#records-export').button({'icons': {'primary':"ui-icon-suitcase"}})
-		.click(function(){
-			exportData(false);
-		})
-		.hover(function(){
-			$('#records-export-info').show();
-		}, function(){
-			$('#records-export-info').hide();
-		});
-
 	$(document).on('save delete', 'form.jr', function(e, formList){
 		console.debug('save or delete event detected with new formlist: '+formList);
 		that.updateRecordList(JSON.parse(formList));
@@ -413,7 +402,7 @@ GUI.prototype.setCustomEventHandlers = function(){
 	});
 
 	// handlers for application settings [settings page]
-	this.pages().get('settings').on('change', 'input', function(){
+	this.pages.get('settings').on('change', 'input', function(){
 		var name =  /** @type {string} */  $(this).attr('name');
 		var value = ($(this).is(':checked')) ?  /** @type {string} */ $(this).val().toString() : '';
 		console.debug('settings change by user detected');
@@ -433,7 +422,7 @@ GUI.prototype.updateRecordList = function(recordList, $page) {
 		draftFormsQty = 0;
 	console.debug('updating recordlist in GUI');
 	if(!$page){
-		$page = this.pages().get('records');
+		$page = this.pages.get('records');
 	}
 
 	$list = $page.find('#records-saved ol');
@@ -441,7 +430,7 @@ GUI.prototype.updateRecordList = function(recordList, $page) {
 	//remove the existing option elements
 	$list.children().remove();
 	// get form list object (keys + upload) ordered by time last saved
-	recordList = recordList || [];//store.getFormList();
+	recordList = recordList || [];//store.getRecordList();
 
 	if (recordList.length > 0){
 		for (i=0; i<recordList.length; i++){

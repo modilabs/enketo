@@ -32,9 +32,8 @@
  */
 function StorageLocal(){
 	"use strict";
-	var RESERVED_KEYS = ['__settings', 'null','__history', 'Firebug', 'undefined', '__bookmark', '__counter', '__current_server'];
-
-	var localStorage = window.localStorage;
+	var RESERVED_KEYS = ['__settings', 'null','__history', 'Firebug', 'undefined', '__bookmark', '__counter', '__current_server'],
+		localStorage = window.localStorage;
 	// Could be replaced by Modernizr function if Modernizr remains used in final version
 	this.isSupported = function() {
 		try {
@@ -49,10 +48,8 @@ function StorageLocal(){
 		return RESERVED_KEYS;
 	};
 		
-	// saves a data object in JSON format (string)
-	// ADD CONSIDER separating this function for surveyData and other record types as there seems very little that is shared between record types
 	/**
-	 * [setRecord description]
+	 * saves a data object in JSON format (string)
 	 * @param {string} newKey    [description]
 	 * @param {*} record     [description]
 	 * @param {boolean=} del [description] used to change name of existing record and delete old record
@@ -61,9 +58,6 @@ function StorageLocal(){
 	 * @return {string}
 	 */
 	this.setRecord = function(newKey, record, del, overwrite, oldKey) {
-		console.debug('setRecord received record with final: '+record['ready']);
-		//console.debug(record);
-		//var record = rec;
 		if (!newKey || newKey.length < 1){
 			console.error('no key provided for record');
 			return 'require';
@@ -72,7 +66,7 @@ function StorageLocal(){
 		oldKey = (typeof oldKey === 'string') ? oldKey.trim() : null;
 		overwrite = (typeof overwrite !== 'undefined' && overwrite === true) ? true : false;
 		
-		// ADD: CATCH ERROR WHEN LOCALSTORAGE SPACE IS FULL
+		//TODO: CATCH ERROR WHEN LOCALSTORAGE SPACE IS FULL
 		
 		//using the knowledge that only survey data is provided as a "data" property (and is  a string)
 		if (typeof record['data'] === 'string' && isReservedKey(newKey)){
@@ -93,12 +87,7 @@ function StorageLocal(){
 				localStorage.setItem('__counter', JSON.stringify({'counter': this.getCounterValue()}));
 				//}
 			}
-			//record['ready'] = (Boolean(record['ready']) === true) ? true : false;
-			//console.log('lastSaved: '+data['lastSaved']);
-			localStorage.setItem(newKey, JSON.stringify(record)); //{
-				//"data": record['data'], "ready": record['ready'], "lastSaved":record['lastSaved']
-			//}));
-			
+			localStorage.setItem(newKey, JSON.stringify(record));
 			console.debug('saved: '+newKey+', old key was: '+oldKey);
 			//if the record was loaded from the store (oldKey != null) and the key's value was changed during editing
 			//delete the old record if del=true
@@ -139,7 +128,7 @@ function StorageLocal(){
 		try{
 			localStorage.removeItem(key);
 			//console.log('removed record with key:'+key) // DEBUG
-			$('form.jr').trigger('delete', JSON.stringify(this.getFormList()));
+			$('form.jr').trigger('delete', JSON.stringify(this.getRecordList()));
 			return true;
 		}
 		catch(e){
@@ -148,17 +137,23 @@ function StorageLocal(){
 		}
 	};
 
-//	this.setRecordStatus = function (key, status){
-//		var record = this.getRecord(key);
-//		record.ready = status;
-//		this.setRecord(key, record, false, true, key);
-//	};
-	
 	/**
-	 * returns an ordered array of objects with form keys and final variables {{"key": "name1", "final": true},{"key": "name2", etc.
+	 * Returns a list of locally stored form names and properties for a provided server URL
+	 * @param  {string} serverURL
+	 * @return {Array.<{name: string, server: string, title: string, url: string}>}
+	 */
+	this.getFormList = function(serverURL){
+		if (typeof serverURL == 'undefined'){
+			return null;
+		}
+		return /**@type {Array.<{name: string, server: string, title: string, url: string}>}*/this.getRecord('__server_'+serverURL);
+	};
+
+	/**
+	 * returns an ordered array of objects with record keys and final variables {{"key": "name1", "final": true},{"key": "name2", etc.
 	 * @return { Array.<Object.<string, (boolean|string)>>} [description]
 	 */
-	this.getFormList = function(){
+	this.getRecordList = function(){
 		var i, ready, record,
 			formList=[],
 			records = this.getSurveyRecords(false);
@@ -173,8 +168,7 @@ function StorageLocal(){
 		formList.sort(function(a,b){
 			return b['lastSaved']-a['lastSaved'];
 		});
-		//console.debug('formlist: '+JSON.stringify(formList));
-		return formList;//returns empty object if no form data in storage or error was thrown
+		return formList;
 	};
 	
 	/**
@@ -189,46 +183,31 @@ function StorageLocal(){
 			record  = {};
 		finalOnly = finalOnly || false;
 		excludeName = excludeName || null;
-		//try{
-			//console.log(localStorage.length+' records found'); // DEBUG
-			for (i=0; i<localStorage.length; i++) {
-				key = localStorage.key(i);
-				//console.debug('found record with with key:'+key);
-				record = this.getRecord(key);//localStorage.getItem(key);
-				// get record - all non-reserved keys contain survey data
-				if (!isReservedKey(key)){
-					//console.debug('record with key: '+key+' is survey data');
-					try{
-						//record = JSON.parse(record);
-						//console.debug('record:');
-						//console.debug(record);
-						/* although the key is also available as one of the record properties
-							this should not be relied upon and the actual storage key should be used */
-						record.key = key;
-						//record['ready'] = record['ready'];
-						//record['lastSaved'] = record['lastSaved'];
-						//if (record.recordType === recordType){
-						console.debug('this record is surveyData: '+record.key); // DEBUG
-						console.debug('excludename: '+excludeName);
-						console.debug('record.ready: '+record['ready']+' type:'+typeof record['ready']);
-						//=== true comparison breaks in Google Closure compiler. Should probably be called with --output_wrapper to prevent this (but not possible in ANT?)
-						//alternatively, the complete code could perhaps be wrapped in an anonymous function (except declaration of globals?)
-						if (key !== excludeName && (!finalOnly || record['ready'] === 'true' || record['ready'] === true )){//} && (record.key !== form.getKey()) ){
-							records.push(record);
-						}
-					}
-					catch(e){
-						console.log('record found that was probably not in the correct JSON format'+
-							' (e.g. Firebug settings or corrupt record) (error: '+e.message+'), record was ignored');
+
+		for (i=0; i<localStorage.length; i++) {
+			key = localStorage.key(i);
+			//console.debug('found record with with key:'+key);
+			record = this.getRecord(key);//localStorage.getItem(key);
+			// get record - all non-reserved keys contain survey data
+			if (!isReservedKey(key)){
+				//console.debug('record with key: '+key+' is survey data');
+				try{
+					/* although the key is also available as one of the record properties
+						this should not be relied upon and the actual storage key should be used */
+					record.key = key;
+					//=== true comparison breaks in Google Closure compiler. Should probably be called with --output_wrapper to prevent this (but not possible in ANT?)
+					//alternatively, the complete code could perhaps be wrapped in an anonymous function (except declaration of globals?)
+					if (key !== excludeName && (!finalOnly || record['ready'] === 'true' || record['ready'] === true )){//} && (record.key !== form.getKey()) ){
+						records.push(record);
 					}
 				}
+				catch(e){
+					console.log('record found that was probably not in the correct JSON format'+
+						' (e.g. Firebug settings or corrupt record) (error: '+e.message+'), record was ignored');
+				}
 			}
-		//}
-		//catch(e){
-		//	console.log('error with retrieving all survey data data from storage');
-		//	data = [];
-		//}
-		//console.debug('getSurveyRecords() returns: '+JSON.stringify(records)); // DEBUG
+		}
+
 		return records;
 	};
 
@@ -348,67 +327,67 @@ function isNumber(n){
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-/**
- * Settings class depends on Store Class
- * TODO MAKE THIS CLASS FUNCTION WITHOUT STORAGE TOO (GLOBAL VAR)
- * @constructor
- */
-function Settings(){
-	"use strict";
-}
+///**
+// * Settings class depends on Store Class
+// * TODO MAKE THIS CLASS FUNCTION WITHOUT STORAGE TOO (GLOBAL VAR)
+// * @constructor
+// */
+//function Settings(){
+//	"use strict";
+//}//
 
-Settings.prototype.init = function(){
-	"use strict";
-	var i, value, name,
-		settings = this.get(),
-		that = this;
-	
-	//set settings (loose coupling with GUI)
-	$(document).trigger('setsettings', settings);
-	//perform actions based on settings at launch
-	//for (var prop in settings){
-		
-	//}
-};
+//Settings.prototype.init = function(){
+//	"use strict";
+//	var i, value, name,
+//		settings = this.get(),
+//		that = this;
+//
+//	//set settings (loose coupling with GUI)
+//	$(document).trigger('setsettings', settings);
+//	//perform actions based on settings at launch
+//	//for (var prop in settings){
+//		
+//	//}
+//};//
 
-//communicates with local storage
-/**
- * [get description]
- * @return {Object.<string, (boolean|string)>}         [description]
- */
-Settings.prototype.get = function(){
-	"use strict";
-	//DISABLED SETTINGS IN LOCAL STORAGE AS IT IS NOT REQUIRED FOR NOW
-	//return store.getRecord('__settings') || DEFAULT_SETTINGS;
-	return DEFAULT_SETTINGS;
-};
+////communicates with local storage
+///**
+// * [get description]
+// * @return {Object.<string, (boolean|string)>}         [description]
+// */
+//Settings.prototype.get = function(){
+//	"use strict";
+//	//DISABLED SETTINGS IN LOCAL STORAGE AS IT IS NOT REQUIRED FOR NOW
+//	//return store.getRecord('__settings') || DEFAULT_SETTINGS;
+//	return DEFAULT_SETTINGS;
+//};//
 
-/**
- * [getOne description]
- * @param  {string} setting [description]
- * @return {?(string|boolean)}         [description]
- */
-Settings.prototype.getOne = function(setting){
-	var settings = this.get();//store.getRecord('__settings') || DEFAULT_SETTINGS;
-	return (typeof setting !== 'undefined' && typeof settings[setting] !== 'undefined') ? settings[setting] : null;
-};
+///**
+// * [getOne description]
+// * @param  {string} setting [description]
+// * @return {?(string|boolean)}         [description]
+// */
+//Settings.prototype.getOne = function(setting){
+//	var settings = this.get();//store.getRecord('__settings') || DEFAULT_SETTINGS;
+//	return (typeof setting !== 'undefined' && typeof settings[setting] !== 'undefined') ? settings[setting] : null;
+//};//
 
-/**
- * Communicates with local storage and perform action linked with setting. Called by eventhandler in GUI.
- *
- * @param {string} setting [description]
- * @param {string|boolean} value   [description]
- */
-Settings.prototype.set = function(setting, value){
-	"use strict";
-	var result,
-		settings = this.get();
-	console.debug('going to store setting: '+setting+' with value:'+value);
-	settings[setting] = value;
-	result = store.setRecord('__settings', settings);
-	//perform action linked to setting
-	if (typeof this[setting] !== 'undefined'){
-		this[setting](value);
-	}
-	return (result === 'success' ) ? true : console.error('error storing settings');
-};
+///**
+// * Communicates with local storage and perform action linked with setting. Called by eventhandler in GUI.
+// *
+// * @param {string} setting [description]
+// * @param {string|boolean} value   [description]
+// */
+//Settings.prototype.set = function(setting, value){
+//	"use strict";
+//	var result,
+//		settings = this.get();
+//	console.debug('going to store setting: '+setting+' with value:'+value);
+//	settings[setting] = value;
+//	result = store.setRecord('__settings', settings);
+//	//perform action linked to setting
+//	if (typeof this[setting] !== 'undefined'){
+//		this[setting](value);
+//	}
+//	return (result === 'success' ) ? true : console.error('error storing settings');
+//};

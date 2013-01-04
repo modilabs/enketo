@@ -20,6 +20,12 @@ $iconWhiteSpritePath: '/images/glyphicons-halflings-white.png'; //patches bug in
         url('fonts/OpenSans-Regular.ttf') format('truetype');
 }
 
+//additional icons
+.icon-crosshairs{
+  background-image: url("/images/crosshairs.png");
+  background-position: -5px -5px;
+}
+
 /****************************
  ****     GENERAL GUI    ****
  ****************************/
@@ -219,8 +225,15 @@ label#data-template-show {
     list-style: none;
     li {
       margin: 10px 0;} }
-  &.empty p{
-    display: none;} }
+  img{
+    display: none; }
+  &.empty{
+    img{ 
+      width: 80%;
+      display: block;
+      margin: 40% auto; }
+    p:not(.alert-error){
+      display: none;} } }
 
 .hint{
   //$hwidth: 30px;
@@ -245,6 +258,15 @@ label#data-template-show {
   font-weight: normal !important;
   /* fix for tooltips when placed inside a legend element (Safari)*/
   line-height: 18px !important;}
+
+//this fixes an inherit bug in bootstrap. It can probably be removed after v2.3.
+.popover{
+  font-size: $baseFontSize !important;
+  color: black !important;
+}
+
+.page-break{
+  display: none; }
 
 /*#launch form{
   margin-top: 20px; 
@@ -285,8 +307,7 @@ label#data-template-show {
     right: 20px; } }
 
 .page{
-  display:none;
-}
+  display:none;}
 
 #page {
   $border: 1px solid #888;
@@ -300,6 +321,13 @@ label#data-template-show {
   background-color: $pagecolor;
   border: none;
   border-top: $border;
+  input, .input-append{
+    text-align: center;}
+  .input-append{
+    margin-top: 30px;
+    width: 100%; }
+  input{
+    width: 80%; }
   hr {
     position: absolute;
     margin: 0;
@@ -330,10 +358,40 @@ label#data-template-show {
 ****    SURVEY FORM    ****
 **************************/
 .paper{
+  .form-header{
+    position: relative;
+    background-color: $groupline;
+    height: 45px;
+    padding: 0;
+    margin: -48px -48px 0px -48px;
+    .branding{
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      margin-top: -0.48 * 1.3em;
+      color: #ffffff;
+      text-shadow: 1px 1px 1px #555;
+      padding: 0;
+      height: 1.3em;
+      font-size: 1.3em; }
+    .print{
+      background-color: $groupline;
+      border-radius: 0;
+      border: none;
+      border-left: 1px solid #999999;
+      height: 100%;
+      width: 60px;
+      float: right;
+      &:hover{
+        background-color: $shadow; } } }
   //margin: 0 0 40px 0;
   #submit-form, #submit-edited-data, #validate-form, #launch-form{
     display: block;
-    margin: 45px auto 5px auto; } }
+    margin: 45px auto 5px auto; }
+  #refresh-list{
+    float: right;
+    margin: -2px -14px 0 14px;
+    width: 60px; } }
 
 .jr [lang]:not(.active), .jr-hint, .jr-option-translations, .jr-appearance-page-break, .jr-constraint-msg.alert-error {
   display: none; }
@@ -375,8 +433,9 @@ html.touch{
   h3{
     //text-align: left;
     padding: 5px 0 15px 0;
-    border-top: solid 9px #000;
-    border-bottom: $line;
+    font-weight: bolder;
+    /*border-top: solid 9px #000;*/
+    /*border-bottom: $line;*/
   }
   h4{
     text-align: left;  }
@@ -485,49 +544,89 @@ html.touch{
       display: inline-block;
       margin-right: 10px; } }
   .geopoint{ 
-    position: relative;
-    height: 340px;
     $map-height: 275px;
-    .map-canvas, input[name="search"]{
-      width: 380px; }
+    $map-width: 65%;
+    $input-width: 27%;
+    $separator-width: 4%;
+    $detect-width: 40px;
+    $search-width: 70%;
+    .geo-inputs{
+      min-width: 160px;
+      width: $input-width;
+      margin: 0 $separator-width 0 0;
+      @media screen and (max-width: 700px){
+        width: 100%; } }
+    .map-canvas-wrapper, .search-bar{
+      width: $map-width;  
+      float: right;
+      padding-left: $separator-width;
+      border-left: solid 1px $groupline; 
+      @media screen and (max-width: 700px){
+        width: 100%;
+        float: none; 
+        padding-left: 0;
+        border-left: none; }
+      img{
+        width: 100%;
+        height: 100%; } }
+    button{
+      height: 40px;
+      &[name="geodetect"]{
+        display: inline-block;
+        float: right;
+        margin: 8px 0 0 $separator-width;
+        width: $detect-width; } }
+    .no-search-input{
+      &.no-map{
+        border-left: none; }
+      button[name="geodetect"]{
+        float: none;
+        display: block;
+        margin: 15px auto 15px auto;
+        width: 50%; } }
+    label.geo{
+      display: block;
+      border: none;
+      padding: 0;
+      margin: 15px 0 0 0;
+      &:nth-of-type(1){
+        padding-top: 5px; } 
+      &:nth-of-type(2){
+        margin-bottom: 20px; };
+      &:nth-of-type(3){
+        border-top: solid 1px $groupline;
+        padding: 12px 0 0 0;
+        margin: 0 0 0 0;
+        @media screen and (max-width: 700px){
+          border-top: none; } }
+      &:nth-of-type(4){
+        padding: 0;
+        margin: 5px 0 0 0;}
+      &:nth-of-type(3), &:nth-of-type(4){
+        line-height: 45px;
+        font-size: 0.75 * $baseFontSize; } }
+    input{
+      &[name="search"]{
+        width: $search-width;}
+      &[name="lat"],&[name="long"]{
+        float: none;
+        @include border-box;
+        width: 100%;}
+      &[name="alt"], &[name="acc"]{
+        @include border-box;
+        display: block;
+        float: right;
+        width: 40%;
+        @media screen and (max-width: 700px){
+          width: 50%; } } }
     .map-canvas{
-      position: absolute;
-      right: 0;
-      bottom: 50px;
-      padding: 0 6px;
+      width: 100%;
       border: 1px solid #ccc;
       border-radius: 3px;
       margin-top: 10px;
-      height: $map-height}
-    input[name="search"]{
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      text-align: center; }
-    label.geo{
-      position: absolute;
-      border: none;
-      padding: 0;
-      margin: 0;
-      //padding: 2px 0;
-      &:nth-of-type(1){
-        bottom: 50px + 3 * $map-height/4; }
-      &:nth-of-type(2){
-        bottom: 50px + 2 * $map-height/4; }
-      &:nth-of-type(3){
-        bottom: 50px + $map-height/4; }
-      &:nth-of-type(4){
-        bottom: 50px;}
-      > input{
-        float: none;
-        display: block;
-        margin: 0; } }
-    button{
-      position: absolute;
-      bottom: 0;
-      height: 40px;
-      width: $input-min-width + 16px;
-      margin-top: 10px;} }
+      height: $map-height;
+      img{
+        max-width: none; /*correction*/} } } 
   .bootstrap-select{
     margin-top: 15px;
     .dropdown-toggle{
