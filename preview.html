@@ -1,0 +1,26 @@
+---
+layout: page
+title: enketo webform as preview
+nav: preview
+---
+    <div class="container" id="main">
+	    
+      	<div>
+			<h4>Survey Form Previews</h4>
+			<p>Request url by sending a POST request to:</p>
+				<pre>http://enketo.formhub.org/launch/get_survey_preview_url</pre> 
+			<p>with 2 variables:</p> 
+				<pre>server_url</pre>
+				<pre>form_id</pre>
+			<p>Enketo will return a JSON response like this: </p>
+<pre>
+{
+	success: true,
+	preview_url: "http://enketo.formhub.org/webform/preview?server=http://formhub.org/john&id=form1",
+	reason: null
+}
+</pre>
+
+		</div>
+    </div>	
+</body>

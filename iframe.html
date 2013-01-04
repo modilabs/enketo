@@ -12,12 +12,16 @@ nav: iframe
 			<p>with 2 variables:</p> 
 				<pre>server_url</pre>
 				<pre>form_id</pre>
-			<p>Enketo will return a JSON response including property: </p>
-				<pre>iframe_url</pre>
-			<p>This will be the source for the iframe.</p>
+			<p>Enketo will return a JSON response like this (+ some more properties): </p>
+<pre>
+{
+	success: true,
+	iframe_url: "http://some.url/iframe",
+	reason: null
+}
+</pre>
+			<p>The iframe_url will be the source for the iframe.</p>
 		</div>
     </div>
-    <script src="public/libraries/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="bootstrap/js/bootstrap.min.js"></script>
 	
 </body>
