@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-var CACHE_CHECK_INTERVAL = 3600*1000;
-
 /**
  * Cache Class deals with the HTML5 applicationCache
  * @constructor
  */
 function Cache(){
 	'use strict';
+	this.CACHE_CHECK_INTERVAL = 3600*1000;
 }
 
 /**
@@ -39,12 +38,12 @@ Cache.prototype.init = function(){
 
 	appCache = window.applicationCache;
 	//TODO: USE NOUPDATE EVENT INSTEAD!
-	setTimeout(function(){
+	/**setTimeout(function(){
 		if (appCache.status === 1){
 			gui.updateStatus.offlineLaunch(true);
 			that.showBookmarkMsg();
 		}
-	}, 60 * 1000);
+	}, 60 * 1000);**/
 
 	if (appCache.status === appCache.UPDATEREADY){
 		this.onUpdateReady();
@@ -60,15 +59,21 @@ Cache.prototype.init = function(){
 	$(appCache).on('cached', function(){that.onCached();});
 
 	//when an updated cache is downloaded and ready to be used
-	$(appCache).on('updateready', function(){that.onUpdateReady();});
+	$(appCache).on('updateready', function(){
+		if (appCache.status === appCache.UPDATEREADY){
+			that.onUpdateReady();
+		}
+	});
 	
 	//when an error occurs (not necessarily serious)
 	$(appCache).on('error', function(e){that.onErrors(e);});
 
+	$(appCache).on('noupdate', function(){that.onNoUpdate();});
+
 	setInterval(function(){
 		that.update();
 		//applicationCache.update();
-	}, CACHE_CHECK_INTERVAL);
+	}, this.CACHE_CHECK_INTERVAL);
 
 	return true;
 };
@@ -85,7 +90,16 @@ Cache.prototype.update = function(){
  */
 Cache.prototype.onObsolete = function(){
 	store.removeRecord('__bookmark');
-	gui.alert('Application/form is no longer able to launch offline. Try to refresh the page to fix this.');
+	gui.confirm({
+		msg: 'Refreshing the page may restore it.',
+		heading: 'Offline-disabled.',
+		errorMsg: 'Application/form is no longer able to launch offline. '
+	},{
+		posButton: 'Ok',
+		negButton: 'Refresh',
+		posAction: function(){},
+		negAction: function(){document.location.reload(true);}
+	});
 	gui.updateStatus.offlineLaunch(false);
 };
 
@@ -93,18 +107,45 @@ Cache.prototype.onObsolete = function(){
  * Handler for newly-cached event
  */
 Cache.prototype.onCached = function(){
-	this.showBookmarkMsg('This form can be loaded and used when you are offline! <br />', true);
+	this.showBookmarkMsg('This form works offline! <br />', true);
 	gui.updateStatus.offlineLaunch(true);
 };
+
+/**
+ * Handler for no-update event
+ */
+Cache.prototype.onNoUpdate = function(){
+	this.showBookmarkMsg();
+	gui.updateStatus.offlineLaunch(true);
+};
+
 
 /**
  * Handler for cache update-ready event
  */
 Cache.prototype.onUpdateReady = function(){
 	applicationCache.swapCache();
-	gui.showFeedback("A new version of this application or form has been downloaded. "+
-		"Refresh this page to load the updated version.", 20);
+	gui.feedback("A new version of this application or form has been downloaded. "+
+		"Refresh this page to load the updated version.", 20, 'Updated!',  {
+			posButton: 'Refresh',
+			negButton: 'Cancel',
+			posAction: function(){document.location.reload(true);}
+		}
+	);
 };
+
+
+/*
+gui.confirm({
+			msg: '<div class="alert alert-success">A new version of this application has been downloaded.</div>'+
+				'<br/> Refresh the window to start using it.',
+			heading: 'Updated!'
+		},{
+			posButton: 'Refresh',
+			negButton: 'Cancel',
+			posAction: function(){document.location.reload(true);}
+		});
+*/
 
 /**
  * Handler for cache error
@@ -135,8 +176,8 @@ Cache.prototype.showBookmarkMsg = function(prepend, force){
 	bookmark = store.getRecord('__bookmark');
 	shown = (bookmark) ? bookmark['shown'] : 0;
 	if(force || shown < 3){
-		gui.showFeedback(prepend+'We recommend to bookmark this page for easy '+
-			'access when you are not connected to the Internet. ');
+		gui.feedback(prepend+'Bookmark this form for easy '+
+			'offline access. ', 15);
 			//'This reminder will be shown '+(2-shown)+' more '+time+'.', 20);
 		shown++;
 		store.setRecord('__bookmark', {'shown': shown});

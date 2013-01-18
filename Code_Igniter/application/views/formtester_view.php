@@ -48,15 +48,16 @@
 					<input type="hidden" name="form_id"/>
 					<!--<input type="submit">Transform and Test!</button>-->
 					
-					<div class="hurry"><a href="formtester?server=http%3A%2F%2Fformhub.org%2Fformhub_u" title="Check forms on http://formhub.org/formhub_u">Pssst, in a hurry?</a></div>
+					<div class="hurry"><a href="formtester?server=http%3A%2F%2Fformhub.org%2Fformhub_u" title="Check forms on http://formhub.org/formhub_u">Just want to see how it works?</a></div>
 				</form>
-				<div id="form-list" class="formlist" style="display:none;">
-					<ul class="btn-group" data-toggle="buttons-radio">
+				<div id="form-list" class="formlist">
+					<ul>
 					</ul>
 				</div>
 			</article>
 
 			<article id="survey-form" class="tab-pane paper">
+					<div class="clearfix"><span class="form-language-selector"></span></div>
 					<form>no form loaded yet</form>
 					<button id="validate-form" class="btn btn-primary btn-large disabled">
 						<i class="icon-ok icon-white"></i> Validate
@@ -173,7 +174,7 @@
 			More information is available <a target="_blank" href="http://blog.aidwebsolutions.com/tag/enketo/">here</a>. 
 		</p>
 		<p>
-			<a href="#contact" title="contact us">Feedback</a> is very welcome. If you discover a bug, it would be great if you could send the xml form to help troubleshoot.
+			Feedback is very welcome at <a href="mailto:<?= $this->config->item('support_email') ?>"><?= $this->config->item('support_email') ?></a>. If you discover a bug, it would be great if you could send the xml form to help troubleshoot.
 			<!--<a href="http://aidwebsolutions.com/blog" title="go to Aid Web Solutions blog post on Rapaide" target=_blank>
 			 More information</a> about the app.-->
 		</p>
@@ -182,7 +183,5 @@
 		--> 
 
 	</article>
-
-	<? require 'elements/page_contact.php'; ?>
 
 	<? require 'elements/footer++.php' ?>
