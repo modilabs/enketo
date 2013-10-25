@@ -23,6 +23,7 @@ class Data extends CI_Controller {
 		$this->load->model('Survey_model', '', TRUE);
 		$this->load->model('Instance_model', '', TRUE);
 		$this->load->helper(array('subdomain','url', 'string', 'http'));
+		log_message('debug', 'Data controller initialized');
 	}
 
 	public function index()
@@ -43,17 +44,23 @@ class Data extends CI_Controller {
 		extract($_POST);
 
 		if (!$submission_url) {
-			return $this->output->set_status_header(500, 'OpenRosa server submission url not set');
+			$msg = 'OpenRosa server submission url not set';
+			log_message('error', $msg);
+			return $this->output->set_status_header(500, $msg);
 		}
 
 		if(!isset($xml_submission_data) || $xml_submission_data == '') {
-			return $this->output->set_status_header(500, 'Enketo server did not receive data');
+			$msg = 'Enketo server did not receive data';
+			log_message('error', $msg);
+			return $this->output->set_status_header(500, $msg );
 		}
 		$xml_submission_filepath = "/tmp/".random_string('alpha', 10).".xml";//*/"/tmp/data_submission.xml";
 		$xml_submission_file = fopen($xml_submission_filepath, 'w');
 			
 		if (!$xml_submission_file) {
-			return $this->output->set_status_header(500, "Issue creating file from uploaded XML data (Enketo server)");
+			$msg = "Issue creating file from uploaded XML data (Enketo server)";
+			log_message('error', $msg);
+			return $this->output->set_status_header(500, $msg);
 		}
 
 		fwrite($xml_submission_file, $xml_submission_data);
@@ -67,6 +74,10 @@ class Data extends CI_Controller {
 		if (!empty($response) && !empty($response['status_code']) && ($response['status_code'] == '201')) {
 			//log_message('debug', 'increasing submission count');
 			$this->Survey_model->increase_submission_count();
+		}
+
+		if ($response['status_code'] !== '201' || $response['status_code'] !== '202') {
+			log_message('error', 'result of submission to '.$submission_url.': '.json_encode($response));
 		}
 		//log_message('debug', 'result of submission: '.json_encode($response));
 		//log_message('debug', 'data submission took '.(time()-$time_start).' seconds.');
