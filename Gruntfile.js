@@ -26,19 +26,30 @@ module.exports = function( grunt ) {
             all: [ "*.js", "src/js/**/*.js", "!src/js/extern.js" ]
         },
         prepWidgetSass: {
-            writePath: "src/scss/_widgets.scss",
+            writePath: "src/sass/component/_widgets.scss",
             widgetConfigPath: "src/js/config.json"
+        },
+        watch: {
+            sass: {
+                files: [ 'src/js/config.json', 'src/scss/**/*.scss', 'public/lib/enketo-core/src/**/*.scss' ],
+                tasks: [ 'style' ],
+                options: {
+                    spawn: false
+                }
+            }
         },
         sass: {
             dist: {
                 options: {
-                    style: "compressed"
+                    style: "compressed",
+                    noCache: true
                 },
                 files: [ {
                     expand: true,
-                    cwd: "src/scss",
+                    cwd: "src/sass",
                     src: [ "**/*.scss", "!**/_*.scss" ],
                     dest: "public/build/css",
+                    flatten: true,
                     ext: ".css"
                 } ]
             }
@@ -176,7 +187,7 @@ module.exports = function( grunt ) {
 
     } );
     grunt.registerTask( "test", [ "jsbeautifier:test", "jshint", "jasmine" ] );
-    grunt.registerTask( "style", [ "prepWidgetSass", "sass" ] );
+    grunt.registerTask( "style", [ "prepWidgetSass", "sass:dist" ] );
     grunt.registerTask( "compile", [ "requirejs" ] );
     grunt.registerTask( "default", [ "test", "style", "compile" ] );
 };
