@@ -85,11 +85,8 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
         } );
 
         $( '.side-slider-toggle' ).on( 'click', function() {
-            //this can be done with flexboxes in near future;
-            $( '.side-slider' ).css( 'height', $( 'body' ).height() );
             window.scrollTo( 0, 0 );
             $( 'body' ).toggleClass( 'show-side-slider' );
-            //recordsDialog( );
         } );
 
         $( '.offline-enabled-icon' ).on( 'click', function() {
@@ -137,7 +134,7 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
             updateStatus.support( supported );
         } );
 
-        $( '#page, #feedback-bar' ).on( 'change', function() {
+        $( '#page, #feedback-bar' ).on( 'changepagebar', function() {
             positionPageAndBar();
         } );
 
@@ -237,13 +234,13 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
                 this.close();
             }
 
-            $( '#page .content' ).prepend( $page.show() ).trigger( 'change' );
+            $( '#page .content' ).prepend( $page.show() ).trigger( 'changepagebar' );
             $( '#page' ).show();
             //$('.overlay').show();
             $( '.main' ).css( 'opacity', '0.3' );
 
             $( window ).on( 'resize.pageEvents', function() {
-                $( '#page' ).trigger( 'change' );
+                $( '#page' ).trigger( 'changepagebar' );
             } );
             setTimeout( function() {
                 $( window ).on( 'click.pageEvents', function( event ) {
@@ -262,7 +259,7 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
             var $page = $( '#page .page' );
             if ( $page.length > 0 ) {
                 this.$pages.append( $page.detach() );
-                $( '#page' ).trigger( 'change' );
+                $( '#page' ).trigger( 'changepagebar' );
                 $( '.navbar-right li' ).removeClass( 'active' );
                 //$('#overlay').hide();
                 $( window ).off( '.pageEvents' );
@@ -295,19 +292,19 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
                 $msg.append( message );
                 $( '#feedback-bar' ).prepend( $msg );
             }
-            $( '#feedback-bar' ).show().trigger( 'change' );
+            $( '#feedback-bar' ).show().trigger( 'changepagebar' );
 
             // automatically remove feedback after a period
             setTimeout( function() {
                 if ( typeof $msg !== 'undefined' ) {
                     $msg.remove();
                 }
-                $( '#feedback-bar' ).trigger( 'change' );
+                $( '#feedback-bar' ).trigger( 'changepagebar' );
             }, duration );
         },
         hide: function() {
             $( '#feedback-bar p' ).remove();
-            $( '#feedback-bar' ).trigger( 'change' );
+            $( '#feedback-bar' ).trigger( 'changepagebar' );
         }
     };
 
@@ -330,7 +327,7 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
             confirm( {
                 msg: message,
                 heading: heading
-            }, choices, duration );
+            }, choices, null, duration );
         } else {
             alert( message, heading, 'info', duration );
         }
@@ -361,13 +358,13 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
             show: true
         } );
 
-        $alert.on( 'hidden', function() {
+        $alert.on( 'hidden.bs.modal', function() {
             $alert.find( '.modal-header h3, .modal-body p' ).html( '' );
             clearInterval( timer );
         } );
 
         if ( typeof duration === 'number' ) {
-            var left = duration.toString();
+            var left = duration;
             $alert.find( '.self-destruct-timer' ).text( left );
             timer = setInterval( function() {
                 left--;
@@ -394,7 +391,7 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
      *   @param {Object=} choices - [type/description]
      *   @param {number=} duration duration in seconds after which dialog should self-destruct
      */
-    function confirm( texts, choices, duration ) {
+    function confirm( texts, choices, values, duration ) {
         var msg, heading, errorMsg, closeFn, dialogName, $dialog, timer;
 
         if ( typeof texts === 'string' ) {
@@ -403,19 +400,16 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
             msg = texts.msg;
         }
 
-        msg = ( typeof msg !== 'undefined' ) ? msg : 'Please confirm action';
-        heading = ( typeof texts.heading !== 'undefined' ) ? texts.heading : 'Are you sure?';
-        errorMsg = ( typeof texts.errorMsg !== 'undefined' ) ? texts.errorMsg : '';
-        dialogName = ( typeof texts.dialog !== 'undefined' ) ? texts.dialog : 'confirm';
-        choices = ( typeof choices !== 'undefined' ) ? choices : {};
+        msg = msg || 'Please confirm action';
+        heading = texts.heading || 'Are you sure?';
+        errorMsg = texts.errorMsg || '';
+        dialogName = texts.dialog || 'confirm';
+        values = values || {};
+        choices = choices || {};
         choices.posButton = choices.posButton || 'Confirm';
         choices.negButton = choices.negButton || 'Cancel';
-        choices.posAction = choices.posAction || function() {
-            return false;
-        };
-        choices.negAction = choices.negAction || function() {
-            return false;
-        };
+        choices.posAction = choices.posAction || function() {};
+        choices.negAction = choices.negAction || function() {};
         choices.beforeAction = choices.beforeAction || function() {};
 
         $dialog = $( '#dialog-' + dialogName );
@@ -427,38 +421,47 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
         if ( !errorMsg ) {
             $dialog.find( '.modal-body .alert-danger' ).hide();
         }
-
-        //instantiate dialog
-        $dialog.modal( {
-            keyboard: true,
-            show: true
+        $dialog.find( 'input, select, textarea' ).each( function() {
+            var name = $( this ).attr( 'name' );
+            $( this ).val( values[ name ] || '' );
         } );
 
+        //instantiate dialog
+        $dialog.modal( 'show' );
+
         //set eventhanders
-        $dialog.on( 'shown', function() {
+        $dialog.on( 'shown.bs.modal', function() {
             choices.beforeAction.call();
         } );
 
         $dialog.find( 'button.positive' ).on( 'click', function() {
-            choices.posAction.call();
+            var values = {};
+            $( this ).closest( '.modal-dialog' ).find( 'input, select, textarea' ).each( function() {
+                if ( $( this ).attr( 'name' ) ) {
+                    values[ $( this ).attr( 'name' ) ] = $( this ).val().trim();
+                }
+            } );
             $dialog.modal( 'hide' );
+            reset();
+            choices.posAction.call( undefined, values );
         } ).text( choices.posButton );
 
         $dialog.find( 'button.negative' ).on( 'click', function() {
-            choices.negAction.call();
             $dialog.modal( 'hide' );
+            reset();
+            choices.negAction.call();
         } ).text( choices.negButton );
 
-        $dialog.on( 'hide', function() {
+        function reset() {
+            console.log( 'confirm dialog reset called' );
             //remove eventhandlers
             $dialog.off( 'shown hidden hide' );
-            $dialog.find( 'button.positive, button.negative' ).off( 'click' );
-        } );
+            // temp workaround or fix for multiple modals when repeatedly attempting to save a record under and existing name)
+            $( 'body>.modal-backdrop' ).remove();
 
-        $dialog.on( 'hidden', function() {
+            $dialog.find( 'button.positive, button.negative' ).off( 'click' );
             $dialog.find( '.modal-body .msg, .modal-body .alert-danger, button' ).text( '' );
-            //console.debug('dialog destroyed');
-        } );
+        }
 
         if ( typeof duration === 'number' ) {
             var left = duration.toString();
@@ -491,6 +494,8 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
 
 	 */
     }
+
+
 
     /**
      * Shows modal asking for confirmation to redirect to login screen
@@ -617,19 +622,19 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
     function positionPageAndBar() {
         console.log( 'positionPageAndBar called' );
         var fTop, pTop,
-            $header = $( 'header' ),
+            $header = $( 'header.navbar' ),
             hHeight = $header.outerHeight() || 0,
             $feedback = $( '#feedback-bar' ),
             fShowing = ( $feedback.find( 'p' ).length > 0 ) ? true : false,
             fHeight = $feedback.outerHeight(),
             $page = $( '#page' ),
             pShowing = pages.isShowing(),
-            pHeight = $page.outerHeight();
+            pHeight = $page.outerHeight() || 0;
 
         //to go with the responsive flow, copy the css position type of the header
         $page.css( {
             'position': $header.css( 'position' )
-        } ); //, 'margin': $header.css('margin'), 'width': $header.css('width')});
+        } );
 
         if ( $header.length > 0 && $header.css( 'position' ) !== 'fixed' ) {
             if ( !fShowing ) {
@@ -642,10 +647,15 @@ define( [ 'Modernizr', 'settings', 'print', 'jquery', 'plugin', ], function( Mod
         }
 
         fTop = ( !fShowing ) ? 0 - fHeight : hHeight;
-        pTop = ( !pShowing ) ? 0 - pHeight : ( fShowing ) ? fTop + fHeight : hHeight;
+        pTop = ( !pShowing ) ? 0 - pHeight : ( ( fShowing ) ? fTop + fHeight : hHeight );
 
-        $feedback.css( 'top', fTop );
-        $page.css( 'top', pTop );
+        // the timeout works around an issue in Chrome where setting the css top property has no impact. 
+        // https://github.com/MartijnR/enketo/issues/245
+        // It is nice from a UX perspective as well to have a slight delay
+        setTimeout( function() {
+            $feedback.css( 'top', fTop + 'px' );
+            $page.css( 'top', pTop + 'px' );
+        }, 100 );
     }
 
     /**

@@ -31,7 +31,7 @@ module.exports = function( grunt ) {
         },
         watch: {
             sass: {
-                files: [ 'src/js/config.json', 'src/scss/**/*.scss', 'public/lib/enketo-core/src/**/*.scss' ],
+                files: [ 'src/js/config.json', 'src/sass/**/*.scss', 'public/lib/enketo-core/src/**/*.scss' ],
                 tasks: [ 'style' ],
                 options: {
                     spawn: false
@@ -41,6 +41,7 @@ module.exports = function( grunt ) {
         sass: {
             dist: {
                 options: {
+                    //sourcemap: true,
                     style: "compressed",
                     noCache: true
                 },

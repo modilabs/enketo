@@ -1,4 +1,14 @@
-$groupline: #bbbbbb;
+// used in openrosa page and form tester
 
-@import "../../public/lib/enketo-core/src/sass/core/_layout";
-@import "../../public/lib/enketo-core/src/sass/core/_responsive";
+@import "../../../public/lib/enketo-core/src/sass/core/layout";
+@import "../../../public/lib/enketo-core/src/sass/core/responsive";
+
+// for views that have a navigation bar and use the form layout
+@media screen and (max-width: $main-breakpoint) {
+    .navbar-fixed-top ~ .main {
+        margin-top: 51px;
+        .nav-tabs {
+        	padding-top: 30px;
+        }
+    }
+}
