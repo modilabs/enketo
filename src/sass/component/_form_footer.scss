@@ -11,18 +11,19 @@
         left: 0;
         width: 100%;
     }
-    .option-wrapper {
+    .draft {
         width: 100%;
-        .draft {
-            @include font-normal;
-            font-style: italic;
-            text-align: center;
-            display: block;
-            border: none;
-            flex: none;
-            padding: 0;
-            margin: 0 auto;
-            max-width: 150px;
+        @include font-normal;
+        font-style: italic;
+        text-align: center;
+        display: block;
+        border: none;
+        flex: none;
+        padding: 0;
+        margin: 0 auto;
+        max-width: 150px;
+        label {
+            width: 100%;
         }
     }
     #submit-form, #submit-form-single, #validate-form, #launch-form {
@@ -50,4 +51,9 @@
             display: none;
         }
     }
+}
+
+.touch .form-footer .draft .option-wrapper > label {
+    border: none !important;
+    width: 100% !important;
 }
