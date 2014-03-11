@@ -135,13 +135,18 @@ class Api_v1 extends CI_Controller {
 
     private function _print_output($response)
     {
-        log_message('debug', 'printing outoup'.json_encode($response));
+        // log_message('debug', 'printing output'.json_encode($response));
         if ($response['code'] == '401'){
             header('WWW-Authenticate: Basic realm="Valid Enketo API Token Required"');
             header('HTTP/1.0 401 Unauthorized');
             //echo("Please enter a valid API Token (username) for your server.");
             echo (json_format(json_encode($response)));
             exit();
+        } else if ($response['code'] == '204'){
+             $this->output
+                ->set_status_header($response['code'])
+                ->set_content_type('application/json')
+                ->set_output('');
         } else {
             $this->output
                 ->set_status_header($response['code'])

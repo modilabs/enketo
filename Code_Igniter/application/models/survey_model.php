@@ -40,12 +40,18 @@ class Survey_model extends CI_Model {
         return TRUE;      
     }
     
-    //returns true if a requested survey or template exists and is active
+    // returns true if a requested survey or template exists in db
     public function is_launched_survey()
     {     
-        return ($this->subdomain) ? ( ($this->_get_item('subdomain', TRUE)) ? TRUE : FALSE ) : NULL;
+        return ($this->subdomain) ? ( ($this->_get_item('subdomain', FALSE)) ? TRUE : FALSE ) : NULL;
     }
     
+    // returns true if a requested survey or template exists and is active
+    public function is_active_survey()
+    {     
+        return ($this->subdomain) ? (($this->_is_active()) ? TRUE : FALSE ) : NULL;
+    }
+
     public function get_form_props()
     {
         return ($this->subdomain) ? $this->_get_items(array('server_url', 'form_id', 'hash', 'media_hash', 'xsl_version'), TRUE) : NULL;
@@ -120,7 +126,7 @@ class Survey_model extends CI_Model {
         );
         
         if ( $quota_used == $quota ){
-            log_message('debug', 'quota used and quota available are both: '.$quota);
+            //log_message('debug', 'quota used and quota available are both: '.$quota);
             $url_obj = $this->get_webform_url_if_launched($server_url, $form_id, $options);
             return (empty($url_obj['error'])) ? $url_obj : $quota_exceeded_response;
         } else if ($quota_used > $quota) {
@@ -474,7 +480,7 @@ class Survey_model extends CI_Model {
         $this->db->or_where("server_url = '".$alt_server_url_2."' AND BINARY form_id = '".$form_id."'".$active_str);
         $this->db->or_where("server_url = '".$alt_server_url_3."' AND BINARY form_id = '".$form_id."'".$active_str);
         $query = $this->db->get('surveys', 1); 
-        log_message('debug', $this->db->last_query());
+        //log_message('debug', $this->db->last_query());
         if ($query->num_rows() === 1) {
             $row = $query->row_array();
             //log_message('debug', 'db query returned '.json_encode($row));
@@ -571,11 +577,11 @@ class Survey_model extends CI_Model {
         $this->db->where('subdomain', $this->db_subdomain);
         $this->db->set($field, $value, $escape);
         $this->db->update('surveys');
-        log_message('debug', 'last query: '.$this->db->last_query());
+        //log_message('debug', 'last query: '.$this->db->last_query());
         if ($this->db->affected_rows() > 0) {
             return TRUE;
         }
-        log_message('debug', 'failed datebase item update (maybe nothing to update) '.$this->db->last_query());
+        log_message('debug', 'failed database item update (maybe nothing to update) '.$this->db->last_query());
         return FALSE;   
     }
 
