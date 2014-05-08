@@ -128,7 +128,6 @@ define( [ 'gui', 'connection', 'settings', 'enketo-js/Form', 'enketo-js/FormMode
             }
         }
 
-
         function loadRecord( recordName, confirmed ) {
             var record, texts, choices, loadErrors;
 
@@ -152,7 +151,7 @@ define( [ 'gui', 'connection', 'settings', 'enketo-js/Form', 'enketo-js/FormMode
                     //var success = form.setData(data);
                     form.resetView();
                     //gui.closePage();
-                    form = new Form( formSelector, defaultModelStr, record.data );
+                    form = new Form( formSelector, defaultModelStr, record.data, true );
                     loadErrors = form.init();
 
                     if ( loadErrors.length > 0 ) {
@@ -626,9 +625,9 @@ define( [ 'gui', 'connection', 'settings', 'enketo-js/Form', 'enketo-js/FormMode
 
                 $( '.side-slider .export-records' ).removeAttr( 'disabled' );
 
-                recordList.forEach( function( record, i ) {
-                    name = recordList[ i ].key;
-                    draft = recordList[ i ].draft;
+                recordList.forEach( function( record ) {
+                    name = record.key;
+                    draft = record.draft;
 
                     // if there is at least one record not marked as draft
                     if ( !draft ) {
