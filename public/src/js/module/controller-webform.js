@@ -31,11 +31,11 @@ define( [ 'gui', 'connection', 'settings', 'enketo-js/Form', 'enketo-js/FormMode
             options = options || {};
             instanceStrToEdit = instanceStrToEdit || null;
             store = options.recordStore || null;
-            fileManager = ( options.fileStore && options.fileStore.isSupported() ) ? options.fileStore : null;
+            fileManager = options.fileStore;
 
             connection.init( true );
 
-            if ( fileManager && ( !store || store.getRecordList().length === 0 ) ) {
+            if ( fileManager && fileManager.isSupported() && fileManager.flush && ( !store || store.getRecordList().length === 0 ) ) {
                 //clean up filesystem storage
                 fileManager.flush();
             }
@@ -403,7 +403,7 @@ define( [ 'gui', 'connection', 'settings', 'enketo-js/Form', 'enketo-js/FormMode
             function gatherFiles() {
                 $fileNodes.each( function() {
                     fileO = {
-                        newName: $( this ).nodeName,
+                        newName: $( this ).prop( 'nodeName' ),
                         fileName: $( this ).text()
                     };
                     fileManager.getFile( instanceID, fileO, {
