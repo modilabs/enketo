@@ -37,7 +37,7 @@ module.exports = function( grunt ) {
         },
         watch: {
             sass: {
-                files: [ 'public/src/js/config.json', 'public/src/sass/**/*.scss', 'public/lib/enketo-core/src/**/*.scss' ],
+                files: [ 'public/src/js/config.json', 'public/src/sass/**/*.scss', 'public/lib/enketo-core/src/**/*.scss', 'src-private/sass/**/*.scss' ],
                 tasks: [ 'style' ],
                 options: {
                     spawn: false
@@ -52,31 +52,23 @@ module.exports = function( grunt ) {
             }
         },
         sass: {
-            options: {
-                //sourcemap: true,
-                style: "expanded",
-                noCache: true
-            },
             pub: {
-
-                files: [ {
-                    expand: true,
-                    cwd: "public/src/sass",
-                    src: [ "**/*.scss", "!**/_*.scss" ],
-                    dest: "public/build/css",
-                    flatten: true,
-                    ext: ".css"
-                } ]
+                files: {
+                    'public/build/css/webform_formhub.css': 'public/src/sass/webform_formhub.scss',
+                    'public/build/css/webform_print_formhub.css': 'public/src/sass/webform_print_formhub.scss',
+                    'public/build/css/empty-front.css': 'public/src/sass/empty-front.scss',
+                    'public/build/css/forms.css': 'public/src/sass/forms.scss',
+                    'public/build/css/formtester.css': 'public/src/sass/formtester.scss',
+                    'public/build/css/webform_grid.css': 'public/src/sass/webform_grid.scss',
+                    'public/build/css/webform_print_grid.css': 'public/src/sass/webform_print_grid.scss'
+                }
             },
             pri: {
-                files: [ {
-                    expand: true,
-                    cwd: "src-private/sass",
-                    src: [ "**/*.scss", "!**/_*.scss" ],
-                    dest: "public/build/css",
-                    flatten: true,
-                    ext: ".css"
-                } ]
+                files: {
+
+                    'public/build/css/openrosa.css': 'src-private/sass/private/openrosa.scss',
+                    'public/build/css/front.css': 'src-private/sass/private/front.scss'
+                }
             }
         },
         jasmine: {
@@ -155,17 +147,6 @@ module.exports = function( grunt ) {
                     out: "public/build/js/formlist-combined.min.js"
                 }
             }
-        },
-        symlink: {
-            expanded: {
-                files: [ {
-                    expand: true,
-                    overwrite: false,
-                    cwd: 'src-private/sass/grid/js',
-                    src: [ '*.js' ],
-                    dest: 'public/src/js/module'
-                } ]
-            }
         }
     } );
 
@@ -218,6 +199,6 @@ module.exports = function( grunt ) {
     } );
     grunt.registerTask( "test", [ "jsbeautifier:test", "jshint", "jasmine" ] );
     grunt.registerTask( "style", [ "prepWidgetSass", "sass" ] );
-    grunt.registerTask( "compile", [ "symlink", "requirejs" ] );
-    grunt.registerTask( "default", [ "symlink", "test", "style", "compile" ] );
+    grunt.registerTask( "compile", [ "requirejs" ] );
+    grunt.registerTask( "default", [ "style", "compile" ] );
 };

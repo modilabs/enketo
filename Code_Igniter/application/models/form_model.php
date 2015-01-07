@@ -528,7 +528,7 @@ class Form_model extends CI_Model {
                 $lang_name = $this->_first_name($row->name_en);
                 //log_message('debug', '.. into lang "'.$lang.'" with name "'.$lang_name.'"');      
             }
-        } else if (strlen($lang) > 3) {
+        } else if ($lang !== 'default' && strlen($lang) > 3) {
             $query_str= 'SELECT `alpha2`, `name_en`'.
                         'FROM (`languages`) '.
                         'WHERE `alpha2` LIKE "__" AND `name_en` LIKE "%'.ucfirst(strtolower($lang)).'%" '.
@@ -542,8 +542,8 @@ class Form_model extends CI_Model {
                 $lang = $row->alpha2;               
             }               
         }
-        $last_query = $this->db->last_query();
-        //log_message('debug', 'db query: '.$last_query);
+        // $last_query = $this->db->last_query();
+        // log_message('debug', 'db query: '.$last_query);
         return array('lang'=>$lang, 'lang_name'=>$lang_name);
     }
     

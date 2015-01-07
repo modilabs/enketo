@@ -16,7 +16,7 @@ require.config( {
         "file-system": "../../../lib/file-system/src/file-system",
         "jquery.xpath": "../../../lib/enketo-core/lib/jquery-xpath/jquery.xpath",
         "Modernizr": "../../../lib/enketo-core/lib/Modernizr",
-        "bootstrap": "../../../lib/enketo-core/lib/bootstrap",
+        "bootstrap": "../../../lib/bower-components/bootstrap-sass-official/assets/javascripts/bootstrap",
         "bootstrap-slider": "../../../lib/enketo-core/lib/bootstrap-slider/js/bootstrap-slider",
         "jquery": "../../../lib/bower-components/jquery/dist/jquery",
         "jquery.touchswipe": "../../../lib/enketo-core/lib/jquery-touchswipe/jquery.touchSwipe",
@@ -24,7 +24,8 @@ require.config( {
         "Blob": "../../../lib/bower-components/blob/Blob",
         "vkbeautify": "../../../lib/vkbeautify/vkbeautify",
         "leaflet": "../../../lib/enketo-core/lib/leaflet/leaflet",
-        "q": "../../../lib/bower-components/q/q"
+        "q": "../../../lib/bower-components/q/q",
+        "print": "../../../lib/enketo-core/src/js/print"
     },
     shim: {
         "xpath": {
